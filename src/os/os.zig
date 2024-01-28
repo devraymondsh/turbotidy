@@ -12,12 +12,6 @@ pub const page_size = switch (builtin.cpu.arch) {
     else => 4 * 1024,
 };
 
-pub fn to_buffer(null_terminated: [*:0]u8) []u8 {
-    var i = 0;
-    while (null_terminated[i] != 0) : (i += 1) {}
-    return null_terminated[0..i];
-}
-
 pub fn exit(status: u8) void {
     if (builtin.os.tag == .linux) {
         if (builtin.cpu.arch == .x86_64)
