@@ -2,13 +2,15 @@ const builtin = @import("builtin");
 const Cli = @import("Cli.zig");
 const math = @import("math.zig");
 const os = @import("os/os.zig");
+const writer = @import("os/writer.zig");
 
 pub usingnamespace @import("os/start.zig");
 
 fn fatal_exit(msg: []const u8) void {
-    os.write("Fatal error: ", 0);
-    os.write(msg, 0);
-    os.write("\n", 0);
+    @setCold(true);
+    var bufwriter = writer.BufWriter(1024).init(0);
+    bufwriter.write_many(3, .{ "Fatal error: ", msg, "\n" });
+    bufwriter.flush();
     os.exit(1);
 }
 

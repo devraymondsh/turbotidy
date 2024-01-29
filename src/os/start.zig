@@ -1,6 +1,7 @@
 const builtin = @import("builtin");
 const os = @import("os.zig");
 pub const root = @import("root");
+const writer = @import("writer.zig");
 
 pub var stack: usize = 0;
 pub fn Start(comptime entry: anytype) type {
@@ -42,9 +43,10 @@ pub fn start() callconv(.C) noreturn {
 
 pub fn panic(msg: []const u8, _: @TypeOf(@errorReturnTrace()), _: ?usize) noreturn {
     @setCold(true);
-    os.write("TurboTidy paniced: ", 0);
-    os.write(msg, 0);
-    os.write("\n", 0);
+    var bufwriter = writer.BufWriter(1024).init(0);
+    bufwriter.write_many(3, .{ "TurboTidy paniced: ", msg, "\n" });
+    bufwriter.flush();
+
     os.exit(1);
     unreachable;
 }
