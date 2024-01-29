@@ -1,7 +1,8 @@
 const builtin = @import("builtin");
 const os = @import("../os/os.zig");
-const Allocator = @import("Allocator.zig");
 const math = @import("../math.zig");
+const Allocator = @import("Allocator.zig");
+const ArenaMmapAllocator = @import("ArenaMmapAllocator.zig");
 
 const FreelistNode = packed struct {
     len: usize,
@@ -9,27 +10,14 @@ const FreelistNode = packed struct {
 };
 var empty_freelist = FreelistNode{ .len = 0, .next = null };
 
-cursor: usize,
 freelist: *FreelistNode,
-mem: []align(os.page_size) u8,
+arena: ArenaMmapAllocator,
 
 const MmapAllcoator = @This();
 
-fn unlikely() void {
-    @setCold(true);
-}
-
 pub fn init(total_size: usize) !MmapAllcoator {
     return MmapAllcoator{
-        .mem = try os.mmap(
-            null,
-            math.alignForward(usize, total_size, os.page_size),
-            os.PROT.NONE,
-            os.MAP.ANONYMOUS | os.MAP.PRIVATE,
-            0,
-            0,
-        ),
-        .cursor = 0,
+        .arena = try ArenaMmapAllocator.init(total_size),
         .freelist = &empty_freelist,
     };
 }
@@ -56,20 +44,7 @@ fn alloc(ctx: *anyopaque, size: usize) ?[]u8 {
         }
     }
 
-    const starting_pos = self.cursor;
-    var ending_pos: usize = starting_pos + 16;
-    if (size > 16) {
-        ending_pos += math.alignForward(usize, size - 16, 8);
-    }
-
-    self.cursor = ending_pos;
-
-    if (self.cursor > self.mem.len) {
-        unlikely();
-        return null;
-    }
-
-    return self.mem[starting_pos .. starting_pos + size];
+    return ArenaMmapAllocator.alloc(@alignCast(@ptrCast(&self.arena)), size);
 }
 
 fn free(ctx: *anyopaque, buf: []u8) void {
@@ -105,5 +80,5 @@ pub fn allocator(self: *MmapAllcoator) Allocator {
 }
 
 pub fn deinit(self: *MmapAllcoator) void {
-    os.unmap(self.mem);
+    self.arena.deinit();
 }
