@@ -27,7 +27,13 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
     @setRuntimeSafety(false);
     if (builtin.os.tag == .linux) {
         const opensys_res = os.linux.syscall(.open, .{
-            @intFromPtr(path), os.linux.O.RDWR, 0,
+            @intFromPtr(path),
+            switch (kind) {
+                .ReadOnly => os.linux.O.RDONLY,
+                .WriteOnly => os.linux.O.WRONLY,
+                .ReadAndWrite => os.linux.O.RDWR,
+            },
+            0,
         });
         if (os.linux.get_errno(opensys_res) != .SUCCESS) {
             return error.FailedToOpenTheFile;

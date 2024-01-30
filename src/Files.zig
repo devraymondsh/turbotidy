@@ -14,7 +14,7 @@ pub fn init(allocator: Allocator, args: [][*:0]u8) FilesInitError!Files {
     // Keeping track of how much files are pushed in order to free them in case of failure.
     var pushed: usize = 0;
     for (args, 0..) |arg, idx| {
-        maps[idx] = os.Mmapf.init(.ReadAndWrite, arg) catch |e| {
+        maps[idx] = os.Mmapf.init(.ReadOnly, arg) catch |e| {
             var bufprinter = os.BufPrinter(200).init();
             bufprinter.write_many(3, .{ "Failed to read: ", mem.span(arg), "\n" });
             bufprinter.flush();
