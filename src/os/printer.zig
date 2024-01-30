@@ -1,22 +1,20 @@
 const os = @import("os.zig");
 
-pub fn BufWriter(comptime size: comptime_int) type {
+pub fn BufPrinter(comptime size: comptime_int) type {
     return struct {
-        fd: i32,
         buf: [size]u8 = undefined,
         pos: u16 = 0,
 
-        const BufWriterInner = @This();
+        const BufPrinterInner = @This();
 
-        pub fn init(fd: i32) @This() {
-            return BufWriterInner{
+        pub fn init() @This() {
+            return BufPrinterInner{
                 .buf = undefined,
-                .fd = fd,
                 .pos = 0,
             };
         }
 
-        pub fn write(self: *BufWriterInner, msg: []const u8) void {
+        pub fn write(self: *BufPrinterInner, msg: []const u8) void {
             const new_pos = self.pos + msg.len;
             if (new_pos > self.buf.len) {
                 self.flush();
@@ -27,14 +25,14 @@ pub fn BufWriter(comptime size: comptime_int) type {
             self.pos += @intCast(msg.len);
         }
 
-        pub fn write_many(self: *BufWriterInner, comptime n: comptime_int, msgs: [n][]const u8) void {
+        pub fn write_many(self: *BufPrinterInner, comptime n: comptime_int, msgs: [n][]const u8) void {
             inline for (msgs) |msg| {
                 self.write(msg);
             }
         }
 
-        pub fn flush(self: *BufWriterInner) void {
-            os.write(self.buf[0..self.pos], self.fd);
+        pub fn flush(self: *BufPrinterInner) void {
+            os.print(self.buf[0..self.pos]);
             self.pos = 0;
         }
     };
