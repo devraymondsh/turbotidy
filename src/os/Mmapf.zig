@@ -46,24 +46,23 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
             return error.EmptyFile;
         }
 
+        var nullobj: ?void = null;
         const mmapsys_res = os.linux.syscall(.mmap, .{
-            @as(usize, 0),
+            @intFromPtr(&nullobj),
             fstatbuf.size,
             switch (kind) {
                 .ReadOnly => os.linux.PROT.READ,
                 .WriteOnly => os.linux.PROT.WRITE,
                 .ReadAndWrite => os.linux.PROT.READ | os.linux.PROT.WRITE,
             },
-            os.linux.MAP.ANONYMOUS | os.linux.MAP.PRIVATE,
+            os.linux.MAP.PRIVATE,
             opensys_res,
             @as(u64, 0),
         });
 
-        if (os.linux.get_errno(opensys_res) == .SUCCESS) {
-            return Mmapf{ .mem = @as(
-                [*]align(os.page_size) u8,
-                @ptrFromInt(mmapsys_res),
-            )[0..opensys_res] };
+        if (os.linux.get_errno(mmapsys_res) == .SUCCESS) {
+            var ptr: [*]align(os.page_size) u8 = @ptrFromInt(mmapsys_res);
+            return Mmapf{ .mem = ptr[0..@intCast(fstatbuf.size)] };
         }
 
         return error.FailedToMapTheFileToMemory;
