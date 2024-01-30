@@ -25,7 +25,7 @@ pub fn any_to_byte(comptime T: type, src: []T) []u8 {
 
     var ret: []u8 = undefined;
     ret.ptr = @alignCast(@ptrCast(src.ptr));
-    ret.len = src.len / @sizeOf(T);
+    ret.len = src.len * @sizeOf(T);
 
     return ret;
 }
@@ -38,7 +38,7 @@ pub fn byte_to_any(comptime T: type, src: []u8) []T {
 
     var ret: []T = undefined;
     ret.ptr = @alignCast(@ptrCast(src.ptr));
-    ret.len = src.len * @sizeOf(T);
+    ret.len = src.len / @sizeOf(T);
 
     return ret;
 }

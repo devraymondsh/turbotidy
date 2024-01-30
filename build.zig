@@ -13,6 +13,13 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 
+    if (optimize != .Debug) {
+        exe.root_module.strip = true;
+        if (target.result.os.tag != .macos) {
+            exe.want_lto = true;
+        }
+    }
+
     const run_step = b.step("run", "Run the application");
     run_step.dependOn(&b.addRunArtifact(exe).step);
 }
