@@ -39,6 +39,6 @@ pub fn init(n: usize) !PageAllocator {
 pub fn deinit(self: *PageAllocator) void {
     @setRuntimeSafety(false);
     if (builtin.os.tag == .linux) {
-        _ = os.linux.syscall(.munmap, .{ @intFromPtr(self.mem.ptr), self.mem.len });
+        _ = os.linux.syscall(.munmap, .{ self.mem.ptr, self.mem.len });
     }
 }

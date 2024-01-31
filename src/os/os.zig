@@ -30,7 +30,7 @@ pub fn print(buf: []const u8) void {
     if (builtin.os.tag == .linux) {
         _ = linux.syscall(.write, .{
             0,
-            @intFromPtr(buf.ptr),
+            buf.ptr,
             buf.len,
         });
     }

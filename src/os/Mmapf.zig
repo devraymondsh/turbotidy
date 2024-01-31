@@ -27,7 +27,7 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
     @setRuntimeSafety(false);
     if (builtin.os.tag == .linux) {
         const opensys_res = os.linux.syscall(.open, .{
-            @intFromPtr(path),
+            path,
             switch (kind) {
                 .ReadOnly => os.linux.O.RDONLY,
                 .WriteOnly => os.linux.O.WRONLY,
@@ -41,7 +41,7 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
 
         var fstatbuf: os.linux.stat = undefined;
         const fstatsys_res = os.linux.syscall(.fstat, .{
-            opensys_res, @intFromPtr(&fstatbuf),
+            opensys_res, &fstatbuf,
         });
         if (os.linux.get_errno(fstatsys_res) != .SUCCESS) {
             return error.FailedToReadTheMetadata;
@@ -52,9 +52,8 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
             return error.EmptyFile;
         }
 
-        var nullobj: ?void = null;
         const mmapsys_res = os.linux.syscall(.mmap, .{
-            @intFromPtr(&nullobj),
+            0,
             fstatbuf.size,
             switch (kind) {
                 .ReadOnly => os.linux.PROT.READ,
@@ -63,7 +62,7 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
             },
             os.linux.MAP.PRIVATE,
             opensys_res,
-            @as(u64, 0),
+            0,
         });
 
         if (os.linux.get_errno(mmapsys_res) == .SUCCESS) {
@@ -80,6 +79,6 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
 pub fn deinit(self: *Mmapf) void {
     @setRuntimeSafety(false);
     if (builtin.os.tag == .linux) {
-        os.linux.syscall(.munmap, .{ @intFromPtr(self.mem.ptr), self.mem.len });
+        os.linux.syscall(.munmap, .{ self.mem.ptr, self.mem.len });
     }
 }
