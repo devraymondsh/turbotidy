@@ -396,35 +396,6 @@ pub const timespec = extern struct {
     tv_nsec: isize,
 };
 
-pub const fstat = extern struct {
-    /// ID of device containing file
-    dev: dev_t,
-    /// Inode number
-    ino: ino_t,
-    /// Protection
-    mode: mode_t,
-    /// Number of hard links
-    nlink: nlink_t,
-    /// User ID of owner
-    uid: uid_t,
-    /// Group ID of owner
-    gid: gid_t,
-    /// Device ID (if special file)
-    rdev: dev_t,
-    /// Total size, in bytes
-    size: off_t,
-    /// Blocksize for file system I/O
-    blksize: blksize_t,
-    /// Number of 512B blocks allocated
-    blocks: blkcnt_t,
-    /// Time of last access
-    atime: time_t,
-    /// Time of last modification
-    mtime: time_t,
-    /// Time of last status change
-    ctime: time_t,
-};
-
 pub const stat = extern struct {
     dev: dev_t,
     __dev_padding: u32,
