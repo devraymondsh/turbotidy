@@ -30,7 +30,7 @@ pub fn alloc(ctx: *anyopaque, size: usize) ?[]u8 {
 }
 
 fn free(_: *anyopaque, _: []u8) void {
-    @panic("Shouldn't call free on an Arena Allocator!");
+    return;
 }
 fn resize(ctx: *anyopaque, buf: []u8, new_size: usize) bool {
     const self: *ArenaAllocator = @alignCast(@ptrCast(ctx));

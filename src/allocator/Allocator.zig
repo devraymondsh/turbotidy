@@ -70,6 +70,21 @@ pub fn resize(self: Allocator, comptime T: type, buf: []T, new_size: usize) Resi
     ));
 }
 
+pub fn resize_or_alloc_byte(self: Allocator, buf: []u8, new_size: usize) Allocator![]u8 {
+    if (self.resize_byte(buf, new_size)) |resized| {
+        return resized;
+    } else |_| {
+        self.free_byte(buf);
+        return self.alloc_byte(new_size);
+    }
+}
+pub fn resize_or_alloc(self: Allocator, comptime T: type, buf: []T, new_size: usize) void {
+    return byte_to_any(T, try self.resize_or_alloc(
+        any_to_byte(T, buf),
+        new_size * @sizeOf(T),
+    ));
+}
+
 pub fn free_byte(self: Allocator, buf: []u8) void {
     self.vtable.free(self.ptr, buf);
 }

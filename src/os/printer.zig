@@ -26,9 +26,7 @@ pub fn BufPrinter(comptime size: comptime_int) type {
         }
 
         pub fn print_many(self: *BufPrinterInner, comptime n: comptime_int, msgs: [n][]const u8) void {
-            inline for (msgs) |msg| {
-                self.print(msg);
-            }
+            inline for (msgs) |msg| self.print(msg);
         }
 
         pub fn flush(self: *BufPrinterInner) void {
