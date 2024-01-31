@@ -13,7 +13,7 @@ pub usingnamespace @import("os/start.zig");
 fn fatal_exit(msg: []const u8) void {
     @setCold(true);
     var bufprinter = printer.BufPrinter(1024).init();
-    bufprinter.write_many(3, .{ "TurboTidy exited with a fatal error: ", msg, "\n" });
+    bufprinter.print_many(3, .{ "TurboTidy exited with a fatal error: ", msg, "\n" });
     bufprinter.flush();
     os.exit(1);
 }
@@ -31,9 +31,9 @@ pub fn main(args: [][*:0]u8, env: [][*:0]u8) void {
     var arena = ArenaAlloactor.init(@alignCast(page.mem));
     const allocator = arena.allocator();
 
-    const files = Files.init(allocator, cli.files) catch |e| switch (e) {
+    var files = Files.init(allocator, cli.files) catch |e| switch (e) {
         error.OutOfMemory => return fatal_exit("Failed to allocate memory."),
         else => return fatal_exit("Unable to open the file."),
     };
-    _ = files; // autofix
+    defer files.deinit();
 }

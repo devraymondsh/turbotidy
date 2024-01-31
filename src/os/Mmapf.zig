@@ -79,6 +79,6 @@ pub fn init(comptime kind: MmapMemProt, path: [*:0]const u8) MmapfInitError!Mmap
 pub fn deinit(self: *Mmapf) void {
     @setRuntimeSafety(false);
     if (builtin.os.tag == .linux) {
-        os.linux.syscall(.munmap, .{ self.mem.ptr, self.mem.len });
+        _ = os.linux.syscall(.munmap, .{ self.mem.ptr, self.mem.len });
     }
 }

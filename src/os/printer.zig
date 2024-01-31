@@ -14,20 +14,20 @@ pub fn BufPrinter(comptime size: comptime_int) type {
             };
         }
 
-        pub fn write(self: *BufPrinterInner, msg: []const u8) void {
+        pub fn print(self: *BufPrinterInner, msg: []const u8) void {
             const new_pos = self.pos + msg.len;
             if (new_pos > self.buf.len) {
                 self.flush();
-                return self.write(msg);
+                return self.print(msg);
             }
 
             @memcpy(self.buf[self.pos..new_pos], msg);
             self.pos += @intCast(msg.len);
         }
 
-        pub fn write_many(self: *BufPrinterInner, comptime n: comptime_int, msgs: [n][]const u8) void {
+        pub fn print_many(self: *BufPrinterInner, comptime n: comptime_int, msgs: [n][]const u8) void {
             inline for (msgs) |msg| {
-                self.write(msg);
+                self.print(msg);
             }
         }
 

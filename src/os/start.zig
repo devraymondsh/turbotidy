@@ -44,7 +44,7 @@ pub fn start() callconv(.C) noreturn {
 pub fn panic(msg: []const u8, _: @TypeOf(@errorReturnTrace()), _: ?usize) noreturn {
     @setCold(true);
     var bufprinter = printer.BufPrinter(1024).init();
-    bufprinter.write_many(3, .{ "TurboTidy paniced: ", msg, "\n" });
+    bufprinter.print_many(3, .{ "TurboTidy paniced: ", msg, "\n" });
     bufprinter.flush();
 
     os.exit(1);

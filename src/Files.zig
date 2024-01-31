@@ -16,7 +16,7 @@ pub fn init(allocator: Allocator, args: [][*:0]u8) FilesInitError!Files {
     for (args, 0..) |arg, idx| {
         maps[idx] = os.Mmapf.init(.ReadOnly, arg) catch |e| {
             var bufprinter = os.BufPrinter(200).init();
-            bufprinter.write_many(3, .{ "Failed to read: ", mem.span(arg), "\n" });
+            bufprinter.print_many(3, .{ "Failed to read: ", mem.span(arg), "\n" });
             bufprinter.flush();
 
             return e;
@@ -31,5 +31,5 @@ pub fn init(allocator: Allocator, args: [][*:0]u8) FilesInitError!Files {
 }
 
 pub fn deinit(self: *Files) void {
-    for (self.maps) |map| map.deinit();
+    for (0..self.maps.len) |idx| self.maps[idx].deinit();
 }
