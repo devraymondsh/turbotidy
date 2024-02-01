@@ -25,7 +25,7 @@ fn is_closing_alpha(char: u8) bool {
     return char == tokens.Cparan or char == tokens.Cbrace;
 }
 
-pub fn tokenize(self: *Tokenizer) Allocator.AllocErr![]Token {
+pub fn tokenize(self: *Tokenizer) Allocator.AllocErr!ArrayList(Token) {
     var tokens_slice = try ArrayList(Token).init(self.allocator);
 
     var is_in_state = false;
@@ -50,5 +50,5 @@ pub fn tokenize(self: *Tokenizer) Allocator.AllocErr![]Token {
         }
     }
 
-    return tokens_slice.get_all();
+    return tokens_slice;
 }

@@ -1,7 +1,8 @@
-const Tokenizer = @import("Tokenizer.zig");
-const Allocator = @import("../allocators/Allocator.zig");
 const os = @import("../os/os.zig");
 const mem = @import("../mem.zig");
+const Tokenizer = @import("Tokenizer.zig");
+const Allocator = @import("../allocators/Allocator.zig");
+const ArrayList = @import("../allocators/ArrayList.zig").ArrayList;
 
 const tokens = @import("tokens.zig");
 const Token = tokens.Token;
@@ -34,7 +35,7 @@ pub fn print_tokens(tokens_slice: []const Token) void {
     }
 }
 
-pub fn analyze(allocator: Allocator, file: []u8) Allocator.AllocErr![]Token {
+pub fn analyze(allocator: Allocator, file: []u8) Allocator.AllocErr!ArrayList(Token) {
     var tokenizer = Tokenizer.init(allocator, file);
 
     return tokenizer.tokenize();

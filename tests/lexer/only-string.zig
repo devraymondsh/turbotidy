@@ -1,19 +1,27 @@
 const std = @import("std");
 const turbotidy = @import("turbotidy");
 
-const string align(8) =
+const strings =
+    [_][]const u8{
+    \\"hi there",
     \\"hi there"
-;
+};
 
 test "only-string" {
-    var page = try turbotidy.allocators.PageAllocator.init(2);
+    var page = try turbotidy.allocators.PageAllocator.init(10);
     defer page.deinit();
     var arena = turbotidy.allocators.ArenaAllocator.init(page.mem);
     const allocator = arena.allocator();
 
-    const str = try allocator.dupe(u8, string);
+    for (strings) |string| {
+        const str = try allocator.dupe(u8, string);
 
-    const tokens = try turbotidy.js.Lexer.analyze(allocator, str);
+        const tokens: turbotidy.allocators.ArrayList.ArrayList(turbotidy.js.tokens.Token) = try turbotidy.js.Lexer.analyze(
+            allocator,
+            str,
+        );
 
-    turbotidy.js.Lexer.print_tokens(tokens);
+        try std.testing.expect(std.mem.eql(u8, @tagName(tokens.mem[0]), "string_literal"));
+        try std.testing.expect(std.mem.eql(u8, tokens.mem[0].string_literal, "hi there"));
+    }
 }

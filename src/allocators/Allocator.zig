@@ -24,7 +24,7 @@ fn align_len(comptime T: type, len: usize) usize {
 /// Allocates a slice. Types that aren't aligned on 8 bits will be stored with padding.
 pub fn alloc(self: Allocator, comptime T: type, len: usize) AllocErr![]T {
     if (self.vtable.alloc(self.ptr, align_len(T, len))) |buf| {
-        return @as([*]T, @alignCast(@ptrCast(buf)))[0..len];
+        return @as([*]T, @ptrFromInt(@intFromPtr(buf)))[0..len];
     }
 
     return AllocErr.OutOfMemory;
@@ -39,7 +39,7 @@ pub fn create(self: Allocator, comptime T: type) AllocErr!T {
 pub fn resize(self: Allocator, comptime T: type, buf: []T, new_len: usize) ResizeErr![]T {
     if (self.vtable.resize(
         self.ptr,
-        @as([*]align(8) u8, @alignCast(@ptrCast(buf.ptr))),
+        @as([*]align(8) u8, @ptrFromInt(@intFromPtr(buf.ptr))),
         buf.len,
         align_len(T, new_len),
     )) return buf[0..new_len];
@@ -70,7 +70,7 @@ pub fn dupe(self: Allocator, comptime T: type, buf: []const T) AllocErr![]T {
 pub fn free(self: Allocator, comptime T: type, buf: []T) void {
     self.vtable.free(
         self.ptr,
-        @as([*]align(8) u8, @alignCast(@ptrCast(buf.ptr))),
+        @as([*]align(8) u8, @ptrFromInt(@intFromPtr(buf.ptr))),
         align_len(T, buf.len),
     );
 }
