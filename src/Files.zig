@@ -1,6 +1,6 @@
 const os = @import("os/os.zig");
 const mem = @import("mem.zig");
-const Allocator = @import("allocator/Allocator.zig");
+const Allocator = @import("allocators/Allocator.zig");
 
 const Files = @This();
 

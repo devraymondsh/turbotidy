@@ -70,7 +70,7 @@ pub fn resize(self: Allocator, comptime T: type, buf: []T, new_size: usize) Resi
     ));
 }
 
-pub fn resize_or_alloc_byte(self: Allocator, buf: []u8, new_size: usize) Allocator![]u8 {
+pub fn resize_or_alloc_byte(self: Allocator, buf: []u8, new_size: usize) AllocErr![]u8 {
     if (self.resize_byte(buf, new_size)) |resized| {
         return resized;
     } else |_| {
@@ -78,11 +78,22 @@ pub fn resize_or_alloc_byte(self: Allocator, buf: []u8, new_size: usize) Allocat
         return self.alloc_byte(new_size);
     }
 }
-pub fn resize_or_alloc(self: Allocator, comptime T: type, buf: []T, new_size: usize) void {
-    return byte_to_any(T, try self.resize_or_alloc(
+pub fn resize_or_alloc(self: Allocator, comptime T: type, buf: []T, new_size: usize) AllocErr![]T {
+    return byte_to_any(T, try self.resize_or_alloc_byte(
         any_to_byte(T, buf),
         new_size * @sizeOf(T),
     ));
+}
+
+pub fn dupe_byte(self: Allocator, buf: []const u8) AllocErr![]u8 {
+    const new_buf = try self.alloc_byte(buf.len);
+    @memcpy(new_buf, buf);
+    return new_buf;
+}
+pub fn dupe(self: Allocator, comptime T: type, buf: []const T) AllocErr![]T {
+    const new_buf = try self.alloc(T, buf.len);
+    @memcpy(new_buf, buf);
+    return new_buf;
 }
 
 pub fn free_byte(self: Allocator, buf: []u8) void {
