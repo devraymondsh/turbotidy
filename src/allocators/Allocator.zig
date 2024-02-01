@@ -1,104 +1,76 @@
+const math = @import("../math.zig");
+
+/// This is an allocator interface which relies on storing data with 8-bit alignment. That means types
+/// that aren't aligned are stored with padding.
 const Allocator = @This();
 
 pub const AllocErr = error{OutOfMemory};
 pub const ResizeErr = error{FailedToResize};
 
-pub const Alloc = *const fn (ctx: *anyopaque, size: usize) ?[]u8;
-pub const Resize = *const fn (ctx: *anyopaque, buf: []u8, new_size: usize) bool;
-pub const Free = *const fn (ctx: *anyopaque, buf: []u8) void;
-
 pub const Vtable = struct {
-    alloc: Alloc,
-    resize: Resize,
-    free: Free,
+    alloc: *const fn (ctx: *anyopaque, len: usize) ?[*]align(8) u8,
+    resize: *const fn (ctx: *anyopaque, buf: [*]align(8) u8, len: usize, new_len: usize) bool,
+    free: *const fn (ctx: *anyopaque, buf: [*]align(8) u8, len: usize) void,
 };
 
 ptr: *anyopaque,
 vtable: *const Vtable,
 
-pub fn any_to_byte(comptime T: type, src: []T) []u8 {
-    comptime {
-        if (@bitSizeOf(T) % 8 != 0) {
-            @compileError("Type's bit size is not devisable by 8");
-        }
-    }
-
-    var ret: []u8 = undefined;
-    ret.ptr = @alignCast(@ptrCast(src.ptr));
-    ret.len = src.len * @sizeOf(T);
-
-    return ret;
-}
-pub fn byte_to_any(comptime T: type, src: []u8) []T {
-    comptime {
-        if (@bitSizeOf(T) % 8 != 0) {
-            @compileError("Type's bit size is not devisable by 8");
-        }
-    }
-
-    var ret: []T = undefined;
-    ret.ptr = @alignCast(@ptrCast(src.ptr));
-    ret.len = src.len / @sizeOf(T);
-
-    return ret;
+/// Aligns forward all types to make everything align on 8 bits.
+fn align_len(comptime T: type, len: usize) usize {
+    return math.alignForward(usize, len * @sizeOf(T), 8);
 }
 
-pub fn alloc_byte(self: Allocator, size: usize) AllocErr![]u8 {
-    if (self.vtable.alloc(self.ptr, size)) |buf| return buf;
+/// Allocates a slice. Types that aren't aligned on 8 bits will be stored with padding.
+pub fn alloc(self: Allocator, comptime T: type, len: usize) AllocErr![]T {
+    if (self.vtable.alloc(self.ptr, align_len(T, len))) |buf| {
+        return @as([*]T, @alignCast(@ptrCast(buf)))[0..len];
+    }
 
     return AllocErr.OutOfMemory;
 }
-pub fn alloc(self: Allocator, comptime T: type, size: usize) AllocErr![]T {
-    const ret = try self.alloc_byte(
-        size * @sizeOf(T),
-    );
-    return byte_to_any(T, ret);
-}
+
+/// Allocates an element.
 pub fn create(self: Allocator, comptime T: type) AllocErr!T {
     return (try self.alloc(T, 1))[0];
 }
 
-pub fn resize_byte(self: Allocator, buf: []u8, new_size: usize) ResizeErr![]u8 {
-    if (self.vtable.resize(self.ptr, buf, new_size)) return buf[0..new_size];
+/// Resizes the slice in place.
+pub fn resize(self: Allocator, comptime T: type, buf: []T, new_len: usize) ResizeErr![]T {
+    if (self.vtable.resize(
+        self.ptr,
+        @as([*]align(8) u8, @alignCast(@ptrCast(buf.ptr))),
+        buf.len,
+        align_len(T, new_len),
+    )) return buf[0..new_len];
 
     return ResizeErr.FailedToResize;
 }
-pub fn resize(self: Allocator, comptime T: type, buf: []T, new_size: usize) ResizeErr![]T {
-    return byte_to_any(T, try self.resize_byte(
-        any_to_byte(T, buf),
-        new_size * @sizeOf(T),
-    ));
-}
 
-pub fn resize_or_alloc_byte(self: Allocator, buf: []u8, new_size: usize) AllocErr![]u8 {
-    if (self.resize_byte(buf, new_size)) |resized| {
+/// Resizes the slice in place or allocates a new slice if failed.
+pub fn resize_or_alloc(self: Allocator, comptime T: type, buf: []T, new_size: usize) AllocErr![]T {
+    if (self.resize(T, buf, new_size)) |resized| {
         return resized;
     } else |_| {
-        self.free_byte(buf);
-        return self.alloc_byte(new_size);
+        self.free(T, buf);
+
+        return self.alloc(T, new_size);
     }
 }
-pub fn resize_or_alloc(self: Allocator, comptime T: type, buf: []T, new_size: usize) AllocErr![]T {
-    return byte_to_any(T, try self.resize_or_alloc_byte(
-        any_to_byte(T, buf),
-        new_size * @sizeOf(T),
-    ));
-}
 
-pub fn dupe_byte(self: Allocator, buf: []const u8) AllocErr![]u8 {
-    const new_buf = try self.alloc_byte(buf.len);
-    @memcpy(new_buf, buf);
-    return new_buf;
-}
+/// Duplicates the slice.
 pub fn dupe(self: Allocator, comptime T: type, buf: []const T) AllocErr![]T {
     const new_buf = try self.alloc(T, buf.len);
     @memcpy(new_buf, buf);
+
     return new_buf;
 }
 
-pub fn free_byte(self: Allocator, buf: []u8) void {
-    self.vtable.free(self.ptr, buf);
-}
+/// Frees the slice.
 pub fn free(self: Allocator, comptime T: type, buf: []T) void {
-    self.free_byte(any_to_byte(T, buf));
+    self.vtable.free(
+        self.ptr,
+        @as([*]align(8) u8, @alignCast(@ptrCast(buf.ptr))),
+        align_len(T, buf.len),
+    );
 }

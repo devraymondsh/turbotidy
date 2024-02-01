@@ -14,28 +14,28 @@ pub fn init(mem: []u8) ArenaAllocator {
     return ArenaAllocator{ .mem = mem, .pos = 0 };
 }
 
-pub fn alloc(ctx: *anyopaque, size: usize) ?[]u8 {
+pub fn alloc(ctx: *anyopaque, len: usize) ?[*]align(8) u8 {
     const self: *ArenaAllocator = @alignCast(@ptrCast(ctx));
-    const new_pos = self.pos + size;
+    const new_pos = self.pos + len;
 
     if (new_pos > self.mem.len) {
         unlikely();
         return null;
     }
 
-    const ret = self.mem[self.pos..new_pos];
+    const ret: [*]align(8) u8 = @alignCast(@ptrCast(&self.mem[self.pos]));
     self.pos = new_pos;
 
     return ret;
 }
 
-fn free(_: *anyopaque, _: []u8) void {
+fn free(_: *anyopaque, _: [*]align(8) u8, _: usize) void {
     return;
 }
-fn resize(ctx: *anyopaque, buf: []u8, new_size: usize) bool {
+fn resize(ctx: *anyopaque, buf: [*]align(8) u8, len: usize, new_len: usize) bool {
     const self: *ArenaAllocator = @alignCast(@ptrCast(ctx));
-    if (@intFromPtr(self.mem[self.pos..].ptr) == (@intFromPtr(buf.ptr) + buf.len)) {
-        const new_pos = self.pos + (new_size - buf.len);
+    if (@intFromPtr(self.mem[self.pos..].ptr) == (@intFromPtr(buf) + len)) {
+        const new_pos = self.pos + (new_len - len);
 
         if (new_pos <= self.mem.len) {
             self.pos = new_pos;
