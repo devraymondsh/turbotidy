@@ -29,6 +29,7 @@ pub fn tokenize_strlit(self: *Tokenizer, dquote: bool) Allocator.AllocErr!void {
     self.pos += 1;
     const starting_pos = self.pos;
     var prev_char = self.mem[self.pos - 1];
+
     while (self.pos < self.mem.len) : ({
         prev_char = self.mem[self.pos];
         self.pos += 1;
@@ -36,11 +37,24 @@ pub fn tokenize_strlit(self: *Tokenizer, dquote: bool) Allocator.AllocErr!void {
         const char = self.mem[self.pos];
 
         if ((dquote and char == tokens.Dquote) or (!dquote and char == tokens.Quote)) {
+            // Handling character escape
             if (prev_char != tokens.Bslash) {
                 try self.arraylist.push(Token{ .string_literal = self.mem[starting_pos..self.pos] });
             }
         }
     }
+}
+
+pub fn tokenize_numlit(self: *Tokenizer) Allocator.AllocErr!void {
+    const starting_pos = self.pos;
+    self.pos += 1;
+
+    while (self.pos < self.mem.len and
+        self.mem[self.pos] >= 48 and self.mem[self.pos] <= 57) : ({
+        self.pos += 1;
+    }) {}
+
+    return try self.arraylist.push(Token{ .numeric_literal = self.mem[starting_pos..self.pos] });
 }
 
 pub fn tokenize(self: *Tokenizer) Allocator.AllocErr!ArrayList(Token) {
@@ -50,6 +64,7 @@ pub fn tokenize(self: *Tokenizer) Allocator.AllocErr!ArrayList(Token) {
         switch (char) {
             tokens.Dquote => try self.tokenize_strlit(true),
             tokens.Quote => try self.tokenize_strlit(false),
+            48...57 => try self.tokenize_numlit(),
             else => {},
         }
     }

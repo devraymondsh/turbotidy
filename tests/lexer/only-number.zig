@@ -7,20 +7,12 @@ const ArrayList = turbotidy.allocators.ArrayList.ArrayList;
 
 const strings =
     [_][]const u8{
-    \\"hi there"
+    \\0123456789
     ,
-    \\"hi \"there\""
-    ,
-    \\"hi \\\"there\""
-    ,
-    \\'hi there'
-    ,
-    \\'hi \'there\''
-    ,
-    \\'hi \\\'there\''
+    \\5453
 };
 
-pub fn only_string(allocator: turbotidy.allocators.Allocator) !void {
+pub fn only_number(allocator: turbotidy.allocators.Allocator) !void {
     for (strings, 0..) |string, idx| {
         const tokens: ArrayList(Token) = try Lexer.analyze(
             allocator,
@@ -30,12 +22,12 @@ pub fn only_string(allocator: turbotidy.allocators.Allocator) !void {
         try std.testing.expect(std.mem.eql(
             u8,
             @tagName(tokens.mem[0]),
-            "string_literal",
+            "numeric_literal",
         ));
         try std.testing.expect(std.mem.eql(
             u8,
-            tokens.mem[0].string_literal,
-            strings[idx][1 .. strings[idx].len - 1],
+            tokens.mem[0].numeric_literal,
+            strings[idx],
         ));
     }
 }
