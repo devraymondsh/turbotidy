@@ -16,12 +16,12 @@ pub const Vtable = struct {
 ptr: *anyopaque,
 vtable: *const Vtable,
 
-/// Aligns forward all types to make everything align on 8 bits.
+/// Aligns forward all types to make everything align on 8 bytes.
 fn align_len(comptime T: type, len: usize) usize {
     return math.alignForward(usize, len * @sizeOf(T), 8);
 }
 
-/// Allocates a slice. Types that aren't aligned on 8 bits will be stored with padding.
+/// Allocates a slice. Types that aren't aligned on 8 bytes will be stored with padding.
 pub fn alloc(self: Allocator, comptime T: type, len: usize) AllocErr![]T {
     if (self.vtable.alloc(self.ptr, align_len(T, len))) |buf| {
         return @as([*]T, @ptrFromInt(@intFromPtr(buf)))[0..len];

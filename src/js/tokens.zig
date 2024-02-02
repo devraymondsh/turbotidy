@@ -8,6 +8,8 @@ pub const Oparan = '(';
 pub const Cparan = ')';
 pub const Obrack = '[';
 pub const Cbrack = ']';
+pub const Slash = '/';
+pub const Bslash = '\\';
 
 pub const Token = union(enum) {
     @"const",

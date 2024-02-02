@@ -36,7 +36,7 @@ pub fn print_tokens(tokens_slice: []const Token) void {
 }
 
 pub fn analyze(allocator: Allocator, file: []u8) Allocator.AllocErr!ArrayList(Token) {
-    var tokenizer = Tokenizer.init(allocator, file);
+    var tokenizer = try Tokenizer.init(allocator, file);
 
     return tokenizer.tokenize();
 }

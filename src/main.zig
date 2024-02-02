@@ -42,6 +42,6 @@ pub fn main(args: [][*:0]u8, env: [][*:0]u8) void {
         const tokens_slice = Lexer.analyze(allocator, map.mem) catch {
             return fatal_exit("Unable allocate memory.");
         };
-        Lexer.print_tokens(tokens_slice);
+        Lexer.print_tokens(tokens_slice.mem);
     }
 }

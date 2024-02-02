@@ -7,12 +7,12 @@ const Token = tokens.Token;
 
 const Tokenizer = @This();
 
-allocator: Allocator,
+arraylist: ArrayList(Token),
 mem: []u8,
 pos: usize = 0,
 
-pub fn init(allocator: Allocator, mem: []u8) Tokenizer {
-    return Tokenizer{ .allocator = allocator, .mem = mem, .pos = 0 };
+pub fn init(allocator: Allocator, mem: []u8) Allocator.AllocErr!Tokenizer {
+    return Tokenizer{ .arraylist = try ArrayList(Token).init(allocator), .mem = mem, .pos = 0 };
 }
 
 fn is_quote_alpah(char: u8) bool {
@@ -25,30 +25,34 @@ fn is_closing_alpha(char: u8) bool {
     return char == tokens.Cparan or char == tokens.Cbrace;
 }
 
-pub fn tokenize(self: *Tokenizer) Allocator.AllocErr!ArrayList(Token) {
-    var tokens_slice = try ArrayList(Token).init(self.allocator);
+pub fn tokenize_strlit(self: *Tokenizer, dquote: bool) Allocator.AllocErr!void {
+    self.pos += 1;
+    const starting_pos = self.pos;
+    var prev_char = self.mem[self.pos - 1];
+    while (self.pos < self.mem.len) : ({
+        prev_char = self.mem[self.pos];
+        self.pos += 1;
+    }) {
+        const char = self.mem[self.pos];
 
-    var is_in_state = false;
-    var state_pos: usize = 0;
+        if ((dquote and char == tokens.Dquote) or (!dquote and char == tokens.Quote)) {
+            if (prev_char != tokens.Bslash) {
+                try self.arraylist.push(Token{ .string_literal = self.mem[starting_pos..self.pos] });
+            }
+        }
+    }
+}
+
+pub fn tokenize(self: *Tokenizer) Allocator.AllocErr!ArrayList(Token) {
     while (self.pos < self.mem.len) : (self.pos += 1) {
         const char = self.mem[self.pos];
 
-        if (char == tokens.Space) {
-            continue;
-        }
-
-        if (is_quote_alpah(char)) {
-            if (is_in_state) {
-                try tokens_slice.push(Token{ .string_literal = self.mem[state_pos..self.pos] });
-                is_in_state = false;
-            } else {
-                is_in_state = true;
-                state_pos = self.pos + 1;
-            }
-        } else {
-            //
+        switch (char) {
+            tokens.Dquote => try self.tokenize_strlit(true),
+            tokens.Quote => try self.tokenize_strlit(false),
+            else => {},
         }
     }
 
-    return tokens_slice;
+    return self.arraylist;
 }
