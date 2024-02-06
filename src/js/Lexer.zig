@@ -1,8 +1,8 @@
-const os = @import("../os/os.zig");
-const mem = @import("../mem.zig");
 const Tokenizer = @import("Tokenizer.zig");
-const Allocator = @import("../allocators/Allocator.zig");
-const ArrayList = @import("../allocators/ArrayList.zig").ArrayList;
+const swift_lib = @import("swift_lib");
+
+const Allocator = swift_lib.heap.Allocator;
+const ArrayList = swift_lib.heap.ArrayList;
 
 const tokens = @import("tokens.zig");
 const Token = tokens.Token;
@@ -10,26 +10,26 @@ const Token = tokens.Token;
 const Lexer = @This();
 
 pub fn print_tokens(tokens_slice: []const Token) void {
-    var bufprinter = os.BufPrinter(100).init();
+    var bufprinter = swift_lib.os.BufPrinter(100).init();
     bufprinter.print("Printing tokens:\n");
     for (tokens_slice) |token| {
         switch (token) {
-            .identifier => bufprinter.println_many(3, .{
-                mem.span(@tagName(token)),
+            .ident => bufprinter.println_many(3, .{
+                swift_lib.mem.span(@tagName(token)),
                 ": ",
-                token.identifier,
+                token.ident,
             }),
-            .numeric_literal => bufprinter.println_many(3, .{
-                mem.span(@tagName(token)),
+            .numlit => bufprinter.println_many(3, .{
+                swift_lib.mem.span(@tagName(token)),
                 ": ",
-                token.numeric_literal,
+                token.numlit,
             }),
-            .string_literal => bufprinter.println_many(3, .{
-                mem.span(@tagName(token)),
+            .strlit => bufprinter.println_many(3, .{
+                swift_lib.mem.span(@tagName(token)),
                 ": ",
-                token.string_literal,
+                token.strlit,
             }),
-            else => bufprinter.println(mem.span(@tagName(token))),
+            else => bufprinter.println(swift_lib.mem.span(@tagName(token))),
         }
         bufprinter.flush();
     }

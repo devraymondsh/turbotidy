@@ -1,9 +1,9 @@
 const std = @import("std");
-const turbotidy = @import("turbotidy");
+const swift_lib = @import("swift_lib");
 
+const turbotidy = @import("turbotidy");
 const Lexer = turbotidy.js.Lexer;
 const Token = turbotidy.js.tokens.Token;
-const ArrayList = turbotidy.allocators.ArrayList.ArrayList;
 
 const strings =
     [_][]const u8{
@@ -12,9 +12,9 @@ const strings =
     \\5453
 };
 
-pub fn only_number(allocator: turbotidy.allocators.Allocator) !void {
+pub fn only_number(allocator: swift_lib.heap.Allocator) !void {
     for (strings, 0..) |string, idx| {
-        const tokens: ArrayList(Token) = try Lexer.analyze(
+        const tokens: swift_lib.heap.ArrayList(Token) = try Lexer.analyze(
             allocator,
             try allocator.dupe(u8, string),
         );
@@ -22,11 +22,11 @@ pub fn only_number(allocator: turbotidy.allocators.Allocator) !void {
         try std.testing.expect(std.mem.eql(
             u8,
             @tagName(tokens.mem[0]),
-            "numeric_literal",
+            "numlit",
         ));
         try std.testing.expect(std.mem.eql(
             u8,
-            tokens.mem[0].numeric_literal,
+            tokens.mem[0].numlit,
             strings[idx],
         ));
     }

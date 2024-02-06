@@ -1,7 +1,13 @@
 .{
     .name = "turbotidy",
     .version = "0.0.0",
-    .dependencies = .{},
     .minimum_zig_version = "0.12.0",
     .paths = .{ "src", "build.zig", "build.zig.zon" },
+    .dependencies = .{
+        // swift_lib v0.3.0
+        .swift_lib = .{
+            .url = "https://github.com/devraymondsh/swift_lib/archive/refs/tags/v0.3.0.tar.gz",
+            .hash = "12201501ad4ac2d6827b2a293219ec8a49d7d12239895f17ad00c6209b0418dad3fe",
+        },
+    },
 }

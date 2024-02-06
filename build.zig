@@ -11,6 +11,16 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const turbotidy_mod = b.addModule("turbotidy", .{
+        .root_source_file = std.Build.LazyPath.relative("src/root.zig"),
+    });
+    const swift_lib = b.dependency("swift_lib", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    turbotidy_mod.addImport("swift_lib", swift_lib.module("swift_lib"));
+    exe.root_module.addImport("swift_lib", swift_lib.module("swift_lib"));
+
     b.installArtifact(exe);
 
     if (optimize != .Debug) {
@@ -24,8 +34,8 @@ pub fn build(b: *std.Build) void {
     run_step.dependOn(&b.addRunArtifact(exe).step);
 
     const test_step = b.step("test", "Runs the tests");
-    const root_mod = b.addModule("turbotidy", .{ .root_source_file = std.Build.LazyPath.relative("src/root.zig") });
     const tests = b.addTest(.{ .root_source_file = std.Build.LazyPath.relative("tests/lexer/lexer.zig") });
-    tests.root_module.addImport("turbotidy", root_mod);
+    tests.root_module.addImport("turbotidy", turbotidy_mod);
+    tests.root_module.addImport("swift_lib", swift_lib.module("swift_lib"));
     test_step.dependOn(&b.addRunArtifact(tests).step);
 }

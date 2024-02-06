@@ -1,16 +1,16 @@
-const turbotidy = @import("turbotidy");
+const swift_lib = @import("swift_lib");
+
 const only_string = @import("only-string.zig").only_string;
 const only_number = @import("only-number.zig").only_number;
-
-const PageAllocator = turbotidy.allocators.PageAllocator;
-const ArenaAllocator = turbotidy.allocators.ArenaAllocator;
+const var_decl = @import("var-decl.zig").var_decl;
 
 test "lexer" {
-    var page = try PageAllocator.init(10);
+    var page = try swift_lib.heap.PageAllocator.init(200);
     defer page.deinit();
-    var arena = ArenaAllocator.init(page.mem);
+    var arena = swift_lib.heap.ArenaAllocator.init(page.mem);
     const allocator = arena.allocator();
 
     try only_string(allocator);
     try only_number(allocator);
+    try var_decl(allocator);
 }

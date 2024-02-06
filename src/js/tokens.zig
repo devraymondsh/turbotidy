@@ -10,13 +10,16 @@ pub const Obrack = '[';
 pub const Cbrack = ']';
 pub const Slash = '/';
 pub const Bslash = '\\';
+pub const SemiCol = ';';
 
 pub const Token = union(enum) {
     @"const",
     @"var",
     function,
-    identifier: []const u8,
+    ident: []const u8,
     let,
-    numeric_literal: []const u8,
-    string_literal: []const u8,
+    semicolon,
+    eqlsign,
+    numlit: []const u8,
+    strlit: []const u8,
 };

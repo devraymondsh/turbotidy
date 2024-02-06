@@ -1,14 +1,13 @@
 const os = @import("os/os.zig");
-const mem = @import("mem.zig");
-const Allocator = @import("allocators/Allocator.zig");
+const swift_lib = @import("swift_lib");
 
 const Files = @This();
 
 maps: []os.Mmapf,
 
-const FilesInitError = Allocator.AllocErr || os.Mmapf.MmapfInitError;
+const FilesInitError = swift_lib.heap.Allocator.AllocErr || os.Mmapf.MmapfInitError;
 
-pub fn init(allocator: Allocator, args: [][*:0]u8) FilesInitError!Files {
+pub fn init(allocator: swift_lib.heap.Allocator, args: [][*:0]u8) FilesInitError!Files {
     var maps = try allocator.alloc(os.Mmapf, args.len);
 
     // Keeping track of how much files are pushed in order to free them in case of failure.
@@ -16,7 +15,7 @@ pub fn init(allocator: Allocator, args: [][*:0]u8) FilesInitError!Files {
     for (args, 0..) |arg, idx| {
         maps[idx] = os.Mmapf.init(.ReadOnly, arg) catch |e| {
             var bufprinter = os.BufPrinter(200).init();
-            bufprinter.print_many(3, .{ "Failed to read: ", mem.span(arg), "\n" });
+            bufprinter.print_many(3, .{ "Failed to read: ", swift_lib.mem.span(arg), "\n" });
             bufprinter.flush();
 
             return e;
